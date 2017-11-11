@@ -1,12 +1,17 @@
 import urllib2
 import sys
 import shutil
-
+import os
 
 def downloadImage(urlFile, downloadPath):
 	if downloadPath and not downloadPath.endswith('/'): downloadPath += '/'
 	f = open(urlFile,'r')
 	i = 0
+	try:
+		os.mkdir(downloadPath)
+	except:
+		print("waring, path exists")
+
  	while True:
 		fileName = f.readline()
 		if not fileName: break

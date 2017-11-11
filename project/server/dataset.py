@@ -3,8 +3,21 @@ import glob
 import numpy as np
 import cv2
 import random
+import sys
 
-def load_train(train_path, image_size, classes):
+def hog(img):    
+	bin_n = 8
+	gx = cv2.Sobel(img, cv2.CV_32F, 1, 0)
+	gy = cv2.Sobel(img, cv2.CV_32F, 0, 1)
+	mag, ang = cv2.cartToPolar(gx, gy)
+	bins = np.int32(bin_n*ang/(2*np.pi))    # quantizing binvalues in (0...16)
+	bin_cells = bins[:10,:10], bins[10:,:10], bins[:10,10:], bins[10:,10:]
+	mag_cells = mag[:10,:10], mag[10:,:10], mag[:10,10:], mag[10:,10:]
+	hists = [np.bincount(b.ravel(), m.ravel(), bin_n) for b, m in zip(bin_cells, mag_cells)]
+	hist = np.hstack(hists)     # hist is a 64 bit vector
+	return hist
+
+def load_train(train_path, image_size, classes, valid_patio, feature = False):
 	images = []
 	labels = []
 	v_images = []
@@ -15,6 +28,7 @@ def load_train(train_path, image_size, classes):
 	v_cls = []
 	print('Reading training images')
 	labeln = 0
+	num = 0
 	for fld in classes:   # assuming data directory has a separate folder for each class, and that each folder is named after the class
     		index = classes.index(fld)
         	path = os.path.join(train_path, fld, '*')
@@ -24,23 +38,39 @@ def load_train(train_path, image_size, classes):
         	for fl in files:
 			print('{}'.format(fl))
 		        try:
+#			for i in (1,1):
 				image = cv2.imread(fl)
 				image = cv2.resize(image, (image_size, image_size), cv2.INTER_LINEAR)
-				image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-				if random.randint(0,99) > 14 :
+				if random.randint(0,99) > valid_patio :
 					print('in trainset')
-		    			images.append(image)
-			            	label = np.zeros(len(classes))
-	        			label[index] = 1.0
+					if feature:
+						image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+						
+						hist = hog(image)
+						images.append(hist)
+						label = index
+		    			else:
+						image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+						images.append(image)
+			            		label = np.zeros(len(classes))
+		        			label[index] = 1.0
 		        		labels.append(label)
 		        		flbase = os.path.basename(fl)
 			        	ids.append(flbase)
 	        			cls.append(fld)
+					num += 1
 				else :
 					print('in validation set')
-					v_images.append(image)
-			            	label = np.zeros(len(classes))
-	        			label[index] = 1.0
+					if feature:
+						image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+						hist = hog(image)
+						v_images.append(hist)
+						label = index
+		    			else:
+						image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+						v_images.append(image)
+			            		label = np.zeros(len(classes))
+		        			label[index] = 1.0
 		        		v_labels.append(label)
 		        		flbase = os.path.basename(fl)
 			        	v_ids.append(flbase)
@@ -48,16 +78,20 @@ def load_train(train_path, image_size, classes):
 			except:
 				print('fail to load image')
 
-	images = np.array(images)
+	if not feature : 
+		images = np.array(images)
+		v_images = np.array(v_images)
+	else : 
+		images = np.float32(images)
+		v_images = np.float32(v_images)
 	labels = np.array(labels)
 	ids = np.array(ids)
 	cls = np.array(cls)
-	v_images = np.array(v_images)
 	v_labels = np.array(v_labels)
 	v_ids = np.array(v_ids)
 	v_cls = np.array(v_cls)
 #	print("Num of images: {}".format(labels.size))
-	return images, labels, ids, cls, v_images, v_labels, v_ids, v_cls
+	return images, labels, ids, cls, v_images, v_labels, v_ids, v_cls, num
 
 def load_test(test_path, image_size):
 	path = os.path.join(test_path, '*g')

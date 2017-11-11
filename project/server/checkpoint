@@ -1,2 +1,2 @@
-model_checkpoint_path: "/home/ubuntu/project/server/model.pkl"
-all_model_checkpoint_paths: "/home/ubuntu/project/server/model.pkl"
+model_checkpoint_path: "/home/ubuntu/CS6203/project/server/model.pkl"
+all_model_checkpoint_paths: "/home/ubuntu/CS6203/project/server/model.pkl"
