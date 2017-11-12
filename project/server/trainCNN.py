@@ -33,11 +33,11 @@ def trainCNN(train_path, classes, image_size = 32,  model_file = 'model.pkl', do
 	network = fully_connected(network, 64, activation='tanh')
 	network = dropout(network, 0.8)
 	network = fully_connected(network, len(classes), activation='softmax')
-	network = regression(network, optimizer='adam', learning_rate=0.0005, loss='categorical_crossentropy', name='target')
+	network = regression(network, optimizer='adam', learning_rate=0.001, loss='categorical_crossentropy', name='target')
 	# Training
 	model = tflearn.DNN(network, tensorboard_verbose=0)
 	print("start")
-	model.fit({'input': X}, {'target': Y}, n_epoch=50, shuffle = True, batch_size = 100, validation_set=({'input': testX}, {'target': testY}), snapshot_step=100, show_metric=True, run_id='convnet_mnist')
+	model.fit({'input': X}, {'target': Y}, n_epoch=20, shuffle = True, batch_size = 100, validation_set=({'input': testX}, {'target': testY}), snapshot_step=100, show_metric=True, run_id='convnet_mnist')
 	print(model.predict(testX))
 	model.save(model_file)
 
@@ -48,5 +48,5 @@ def trainCNN(train_path, classes, image_size = 32,  model_file = 'model.pkl', do
 train_path = '/home/ubuntu/data/mnist_png/training'
 image_size = 28
 classes = ['0','1','2','3','4','5','6','7','8','9']
-model_file = 'model.pkl'
+model_file = 'minist_model.pkl'
 trainCNN(train_path, classes, image_size, model_file)

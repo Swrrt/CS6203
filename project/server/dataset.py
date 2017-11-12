@@ -93,6 +93,35 @@ def load_train(train_path, image_size, classes, valid_patio, feature = False):
 #	print("Num of images: {}".format(labels.size))
 	return images, labels, ids, cls, v_images, v_labels, v_ids, v_cls, num
 
+def load_run(run_path, image_size, feature = False):
+	images = []
+	num = 0
+        path = os.path.join(run_path, '*')
+	print('Loading run files from {}'.format(path))
+       	files = glob.glob(path)
+       	for fl in files:
+		print('{}'.format(fl))
+	        try:
+			image = cv2.imread(fl)
+			image = cv2.resize(image, (image_size, image_size), cv2.INTER_LINEAR)
+			if feature:
+				image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+				hist = hog(image)
+				images.append(hist)
+				num += 1
+    			else:
+				image = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
+				images.append(image)
+				num += 1
+		except:
+			print('fail to load image')
+
+	if not feature : 
+		images = np.array(images)
+	else : 
+		images = np.float32(images)
+	return images, num;
+#
 def load_test(test_path, image_size):
 	path = os.path.join(test_path, '*g')
 	files = sorted(glob.glob(path))
